@@ -733,10 +733,12 @@
                     <div class="stat-card">
                         <div class="stat-label">Instasell</div>
                         <div class="stat-value" id="instasellPrice">-</div>
+                        <div class="ranking-info">Highest sell offer</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Instabuy</div>
                         <div class="stat-value" id="instabuyPrice">-</div>
+                        <div class="ranking-info">Lowest buy bid</div>
                     </div>
                     <div class="stat-card highlight">
                         <div class="stat-label">Margin</div>
@@ -795,7 +797,7 @@
                     <div class="control-group">
                         <label for="rankingMetric">Sort by</label>
                         <select id="rankingMetric">
-                            <option value="margin">Margin (Instasell − Instabuy)</option>
+                            <option value="margin">Margin (Instabuy − Instasell)</option>
                             <option value="marginPct">Margin %</option>
                         </select>
                     </div>
@@ -811,7 +813,7 @@
                 </div>
 
                 <p class="notice notice-info">
-                    Margin = Instasell − Instabuy. Weekly volume = buyMovingWeek + sellMovingWeek. Data refreshes about once per minute. Click a row to inspect an item.
+                    Margin = Instabuy − Instasell. Instasell is the highest sell offer; Instabuy is the lowest buy bid.
                 </p>
 
                 <div id="rankingContainer">
@@ -870,17 +872,19 @@
 
         function getProductPrices(product) {
             const quickStatus = product.quick_status || {};
-            const bidOrders = product.buy_summary || [];
-            const askOrders = product.sell_summary || [];
+            const sellOffers = product.sell_summary || [];
+            const buyBids = product.buy_summary || [];
 
-            const instabuy = askOrders.length
-                ? Math.min(...askOrders.map(order => order.pricePerUnit))
+            // Instasell: price if you instantly sell = highest sell offer
+            const instasell = sellOffers.length
+                ? Math.max(...sellOffers.map(order => order.pricePerUnit))
                 : Number(quickStatus.sellPrice || 0);
-            const instasell = bidOrders.length
-                ? Math.max(...bidOrders.map(order => order.pricePerUnit))
+            // Instabuy: price if you instantly buy = lowest buy bid
+            const instabuy = buyBids.length
+                ? Math.min(...buyBids.map(order => order.pricePerUnit))
                 : Number(quickStatus.buyPrice || 0);
-            const margin = instasell - instabuy;
-            const marginPct = instabuy > 0 ? (margin / instabuy) * 100 : 0;
+            const margin = instabuy - instasell;
+            const marginPct = instasell > 0 ? (margin / instasell) * 100 : 0;
 
             return { instabuy, instasell, margin, marginPct, quickStatus };
         }
@@ -992,8 +996,8 @@
                 card.innerHTML = `
                     <div class="item-name">${formatItemName(productId)}</div>
                     <div class="item-prices">
-                        <span class="price-tag sell">Sell ${formatPriceCompact(instasell)}</span>
-                        <span class="price-tag buy">Buy ${formatPriceCompact(instabuy)}</span>
+                        <span class="price-tag sell">Instasell ${formatPriceCompact(instasell)}</span>
+                        <span class="price-tag buy">Instabuy ${formatPriceCompact(instabuy)}</span>
                     </div>
                 `;
 
@@ -1056,15 +1060,15 @@
                 }
 
                 const productInfo = data.products[productId];
-                const bidOrders = productInfo.buy_summary || [];
-                const askOrders = productInfo.sell_summary || [];
+                const buyBids = productInfo.buy_summary || [];
+                const sellOffers = productInfo.sell_summary || [];
                 const quickStatus = productInfo.quick_status;
 
-                if (bidOrders.length === 0 && askOrders.length === 0) {
+                if (buyBids.length === 0 && sellOffers.length === 0) {
                     throw new Error('No market data available for this product');
                 }
 
-                createChart(productId, bidOrders, askOrders, quickStatus);
+                createChart(productId, buyBids, sellOffers, quickStatus);
                 showMessage(`Market data loaded successfully for ${formatItemName(productId)}`, 'success');
 
             } catch (error) {
@@ -1076,49 +1080,49 @@
             }
         }
         
-        function createChart(productId, bidOrders, askOrders, quickStatus) {
+        function createChart(productId, buyBids, sellOffers, quickStatus) {
             if (typeof Plotly === 'undefined') {
                 showMessage('Chart library failed to load. Refresh the page and try again.', 'error');
                 return;
             }
 
-            const bidData = bidOrders.map(order => ({
+            const sellData = sellOffers.map(order => ({
                 price: order.pricePerUnit,
                 volume: order.amount
             })).sort((a, b) => b.price - a.price);
 
-            const askData = askOrders.map(order => ({
+            const buyData = buyBids.map(order => ({
                 price: order.pricePerUnit,
                 volume: order.amount
             })).sort((a, b) => a.price - b.price);
 
-            let bidCumulative = 0;
-            const bidPoints = bidData.map((order, i) => {
-                bidCumulative += order.volume;
+            let buyCumulative = 0;
+            const buyPoints = buyData.map((order, i) => {
+                buyCumulative += order.volume;
                 return {
-                    x: bidCumulative,
+                    x: buyCumulative,
                     y: order.price,
                     volume: order.volume,
-                    cumulative: bidCumulative,
+                    cumulative: buyCumulative,
                     rank: i + 1
                 };
             });
 
-            let askCumulative = 0;
-            const askPoints = askData.map((order, i) => {
-                askCumulative += order.volume;
+            let sellCumulative = 0;
+            const sellPoints = sellData.map((order, i) => {
+                sellCumulative += order.volume;
                 return {
-                    x: -askCumulative,
+                    x: -sellCumulative,
                     y: order.price,
                     volume: order.volume,
-                    cumulative: askCumulative,
+                    cumulative: sellCumulative,
                     rank: i + 1
                 };
             });
 
             const { instabuy, instasell, margin, marginPct } = getProductPrices({
-                buy_summary: bidOrders,
-                sell_summary: askOrders,
+                buy_summary: buyBids,
+                sell_summary: sellOffers,
                 quick_status: quickStatus
             });
 
@@ -1126,17 +1130,17 @@
 
             const traces = [];
 
-            if (bidPoints.length > 0) {
+            if (buyPoints.length > 0) {
                 traces.push({
-                    x: bidPoints.map(p => p.x),
-                    y: bidPoints.map(p => p.y),
+                    x: buyPoints.map(p => p.x),
+                    y: buyPoints.map(p => p.y),
                     type: 'scatter',
                     mode: 'lines',
                     fill: 'tozeroy',
                     fillcolor: 'rgba(74, 222, 128, 0.18)',
                     line: { color: '#4ade80', width: 2, shape: 'hv' },
-                    name: 'Buy Orders (Bids)',
-                    text: bidPoints.map(p =>
+                    name: 'Buy Orders',
+                    text: buyPoints.map(p =>
                         `Price: ${p.y.toFixed(1)}<br>` +
                         `Volume: ${p.volume.toLocaleString()}<br>` +
                         `Cumulative: ${p.cumulative.toLocaleString()}<br>` +
@@ -1147,17 +1151,17 @@
                 });
             }
 
-            if (askPoints.length > 0) {
+            if (sellPoints.length > 0) {
                 traces.push({
-                    x: askPoints.map(p => p.x),
-                    y: askPoints.map(p => p.y),
+                    x: sellPoints.map(p => p.x),
+                    y: sellPoints.map(p => p.y),
                     type: 'scatter',
                     mode: 'lines',
                     fill: 'tozerox',
                     fillcolor: 'rgba(248, 113, 113, 0.18)',
                     line: { color: '#f87171', width: 2, shape: 'hv' },
-                    name: 'Sell Orders (Asks)',
-                    text: askPoints.map(p =>
+                    name: 'Sell Orders',
+                    text: sellPoints.map(p =>
                         `Price: ${p.y.toFixed(1)}<br>` +
                         `Volume: ${p.volume.toLocaleString()}<br>` +
                         `Cumulative: ${p.cumulative.toLocaleString()}<br>` +
@@ -1168,11 +1172,11 @@
                 });
             }
 
-            const maxBidX = bidPoints.length > 0 ? Math.max(...bidPoints.map(p => p.x)) : 0;
-            const maxAskX = askPoints.length > 0 ? Math.abs(Math.min(...askPoints.map(p => p.x))) : 0;
-            const maxX = Math.max(maxBidX, maxAskX) * 1.1;
+            const maxBuyX = buyPoints.length > 0 ? Math.max(...buyPoints.map(p => p.x)) : 0;
+            const maxSellX = sellPoints.length > 0 ? Math.abs(Math.min(...sellPoints.map(p => p.x))) : 0;
+            const maxX = Math.max(maxBuyX, maxSellX) * 1.1;
 
-            const allPrices = [...bidPoints.map(p => p.y), ...askPoints.map(p => p.y)];
+            const allPrices = [...buyPoints.map(p => p.y), ...sellPoints.map(p => p.y)];
             const minPrice = Math.min(...allPrices);
             const maxPrice = Math.max(...allPrices);
             const priceRange = maxPrice - minPrice;
@@ -1192,7 +1196,7 @@
                 margin: { l: 60, r: 24, t: 72, b: 60 },
                 xaxis: {
                     title: {
-                        text: 'Cumulative volume',
+                        text: 'Cumulative volume (sell orders ← · → buy orders)',
                         font: { size: 12, color: '#a1a1aa' }
                     },
                     tickfont: { color: '#71717a' },
@@ -1225,27 +1229,27 @@
                         type: 'line',
                         x0: -maxX, x1: maxX,
                         y0: instasell, y1: instasell,
-                        line: { color: '#4ade80', width: 1, dash: 'dash' }
+                        line: { color: '#f87171', width: 1, dash: 'dash' }
                     }] : []),
                     ...(instabuy > 0 ? [{
                         type: 'line',
                         x0: -maxX, x1: maxX,
                         y0: instabuy, y1: instabuy,
-                        line: { color: '#f87171', width: 1, dash: 'dash' }
+                        line: { color: '#4ade80', width: 1, dash: 'dash' }
                     }] : [])
                 ],
                 annotations: [
                     ...(instasell > 0 ? [{
                         text: `Instasell ${formatPriceCompact(instasell)}`,
-                        x: maxX * 0.92, y: instasell,
+                        x: -maxX * 0.92, y: instasell,
                         showarrow: false,
-                        font: { color: '#4ade80', size: 11 }
+                        font: { color: '#f87171', size: 11 }
                     }] : []),
                     ...(instabuy > 0 ? [{
                         text: `Instabuy ${formatPriceCompact(instabuy)}`,
-                        x: -maxX * 0.92, y: instabuy,
+                        x: maxX * 0.92, y: instabuy,
                         showarrow: false,
-                        font: { color: '#f87171', size: 11 }
+                        font: { color: '#4ade80', size: 11 }
                     }] : [])
                 ]
             };
