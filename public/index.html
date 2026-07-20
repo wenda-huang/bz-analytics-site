@@ -1,494 +1,825 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hypixel Bazaar Analytics</title>
-    <script src="./index_files/plotly.min.js.download"></script><style id="plotly.js-style-global"></style>
+    <title>Bazaar Analytics · Hypixel SkyBlock</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="./index_files/plotly.min.js"></script>
+    <style id="plotly.js-style-global"></style>
     <style>
+        :root {
+            --bg: #09090b;
+            --bg-elevated: #111114;
+            --surface: #18181b;
+            --surface-hover: #1f1f23;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.14);
+            --text: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent: #fbbf24;
+            --accent-soft: rgba(251, 191, 36, 0.12);
+            --green: #4ade80;
+            --green-soft: rgba(74, 222, 128, 0.12);
+            --red: #f87171;
+            --red-soft: rgba(248, 113, 113, 0.12);
+            --blue: #60a5fa;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow: 0 1px 2px rgba(0, 0, 0, 0.24), 0 12px 32px rgba(0, 0, 0, 0.28);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1e2329 0%, #2d3748 100%);
-            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 20px;
             min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
-        
-        .container {
-            max-width: 1400px;
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at top left, rgba(251, 191, 36, 0.08), transparent 28%),
+                radial-gradient(circle at top right, rgba(96, 165, 250, 0.06), transparent 24%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
             margin: 0 auto;
+            padding: 32px 20px 48px;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .header h1 {
-            background: linear-gradient(45deg, #1c82ff, #f6465d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 2.5em;
-            margin: 0;
-        }
-        
-        .nav-tabs {
+
+        .topbar {
             display: flex;
-            background: rgba(43, 47, 54, 0.8);
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-mark {
+            width: 44px;
+            height: 44px;
             border-radius: 12px;
-            padding: 8px;
-            margin-bottom: 20px;
-            gap: 8px;
+            display: grid;
+            place-items: center;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #09090b;
+            background: linear-gradient(135deg, #fde68a, #fbbf24);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
-        
+
+        .brand h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        .subtitle {
+            margin: 2px 0 0;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+
+        .meta {
+            margin: 0;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .meta:empty {
+            display: none;
+        }
+
+        .tabs {
+            display: inline-flex;
+            gap: 4px;
+            padding: 4px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
         .nav-tab {
-            flex: 1;
-            padding: 12px 20px;
-            background: transparent;
             border: none;
-            border-radius: 8px;
-            color: #b7bdc6;
-            cursor: pointer;
-            transition: all 0.3s;
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 10px 18px;
+            border-radius: 999px;
+            font: inherit;
+            font-size: 0.9rem;
             font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
         }
-        
+
+        .nav-tab:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
         .nav-tab.active {
-            background: linear-gradient(45deg, #00d4aa, #00b894);
-            color: white;
-            transform: translateY(-2px);
+            color: #09090b;
+            background: var(--text);
         }
-        
+
         .tab-content {
             display: none;
         }
-        
+
         .tab-content.active {
             display: block;
+            animation: fadeIn 0.2s ease;
         }
-        
-        .search-section {
-            background: rgba(43, 47, 54, 0.8);
-            border-radius: 12px;
-            padding: 25px;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 24px;
             margin-bottom: 20px;
         }
-        
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .panel-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .panel-desc {
+            margin: 4px 0 0;
+            color: var(--text-muted);
+            font-size: 0.86rem;
+        }
+
         .search-box {
             position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
-        
+
         .search-input {
             width: 100%;
-            padding: 15px 50px 15px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            background: #2d3748;
-            color: white;
-            font-size: 16px;
-            box-sizing: border-box;
+            padding: 14px 16px 14px 42px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--bg-elevated);
+            color: var(--text);
+            font: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
-        
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
         .search-input:focus {
             outline: none;
-            border-color: #00d4aa;
+            border-color: var(--border-strong);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
         }
-        
+
         .search-icon {
             position: absolute;
-            right: 15px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: #b7bdc6;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            pointer-events: none;
         }
-        
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .item-card {
-            background: rgba(30, 35, 41, 0.7);
-            border-radius: 8px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        .item-card:hover {
-            background: rgba(30, 35, 41, 0.9);
-            transform: translateY(-2px);
-            border-color: #00d4aa;
-        }
-        
-        .item-name {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #00d4aa;
-        }
-        
-        .item-prices {
+
+        .toolbar {
             display: flex;
-            justify-content: space-between;
-            font-size: 0.9em;
-            color: #b7bdc6;
-        }
-        
-        .controls {
-            background: rgba(43, 47, 54, 0.8);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
             flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 20px;
         }
-        
+
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
+            min-width: 180px;
         }
-        
+
+        .control-group-wide {
+            flex: 1;
+            min-width: 280px;
+        }
+
         label {
-            font-size: 0.9em;
-            color: #b7bdc6;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
         }
-        
-        input, select, button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 6px;
-            background: #2d3748;
-            color: white;
-            font-size: 14px;
+
+        input, select {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-elevated);
+            color: var(--text);
+            font: inherit;
+            font-size: 0.92rem;
         }
-        
+
         input:focus, select:focus {
-            outline: 2px solid #00d4aa;
+            outline: none;
+            border-color: var(--border-strong);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
         }
-        
-        button {
-            background: linear-gradient(45deg, #00d4aa, #00b894);
-            cursor: pointer;
+
+        input[readonly] {
+            color: var(--text-secondary);
+        }
+
+        input[type="range"] {
+            padding: 0;
+            accent-color: var(--accent);
+        }
+
+        .btn {
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 10px 16px;
+            font: inherit;
+            font-size: 0.92rem;
             font-weight: 600;
-            transition: transform 0.2s;
+            cursor: pointer;
+            transition: transform 0.12s ease, opacity 0.12s ease, background 0.12s ease;
         }
-        
-        button:hover {
-            transform: translateY(-2px);
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
         }
-        
-        button:disabled {
-            background: #4a5568;
+
+        .btn:disabled {
+            opacity: 0.55;
             cursor: not-allowed;
             transform: none;
         }
-        
-        .chart-container {
-            background: rgba(30, 35, 41, 0.9);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-card {
-            background: rgba(43, 47, 54, 0.8);
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: #b7bdc6;
-            font-size: 0.85em;
-        }
-        
-        .volume-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #b7bdc6;
-        }
-        
-        .error {
-            background: rgba(246, 70, 93, 0.1);
-            border: 1px solid #f6465d;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 10px 0;
-            color: #f6465d;
-        }
-        
-        .success {
-            background: rgba(0, 212, 170, 0.1);
-            border: 1px solid #00d4aa;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 10px 0;
-            color: #00d4aa;
-        }
-        
-        .current-item {
-            background: rgba(0, 212, 170, 0.1);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .current-item h2 {
-            margin: 0;
-            color: #00d4aa;
+
+        .btn-primary {
+            background: var(--text);
+            color: #09090b;
         }
 
-        /* Best Flips ranking styles */
-        .ranking-info {
-            color: #b7bdc6;
-            font-size: 0.9em;
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            border: 1px solid var(--border);
         }
-        .ranking-table {
-            background: rgba(30, 35, 41, 0.9);
-            border-radius: 12px;
-            overflow: hidden;
+
+        .btn-danger {
+            background: var(--red-soft);
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.24);
         }
-        .ranking-header, .ranking-row {
+
+        .items-grid {
             display: grid;
-            grid-template-columns: 60px 1.8fr 1fr 1fr 1fr 1fr 1.2fr;
-            gap: 10px;
-            padding: 12px 16px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .items-grid::-webkit-scrollbar,
+        .ranking-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .items-grid::-webkit-scrollbar-thumb,
+        .ranking-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+        }
+
+        .item-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .item-card:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-strong);
+        }
+
+        .item-name {
+            font-weight: 600;
+            font-size: 0.92rem;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .item-prices {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .price-tag {
+            font-size: 0.78rem;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 999px;
+        }
+
+        .price-tag.sell {
+            color: var(--green);
+            background: var(--green-soft);
+        }
+
+        .price-tag.buy {
+            color: var(--red);
+            background: var(--red-soft);
+        }
+
+        .current-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 18px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(251, 191, 36, 0.18);
+            border-radius: var(--radius-md);
+            background: var(--accent-soft);
+        }
+
+        .current-item h2 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .current-item .badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stats,
+        .volume-stats {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .volume-stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .stat-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.76rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-card.highlight .stat-value {
+            color: var(--accent);
+        }
+
+        .chart-container {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 12px;
+        }
+
+        #chart {
+            width: 100%;
+            height: 560px;
+        }
+
+        .loading,
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
+            font-size: 0.92rem;
+        }
+
+        .notice {
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            margin: 0 0 16px;
+        }
+
+        .notice-info {
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+        }
+
+        .error {
+            color: var(--red);
+            background: var(--red-soft);
+            border: 1px solid rgba(248, 113, 113, 0.22);
+        }
+
+        .success {
+            color: var(--green);
+            background: var(--green-soft);
+            border: 1px solid rgba(74, 222, 128, 0.22);
+        }
+
+        .loading.notice {
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+        }
+
+        .ranking-info {
+            color: var(--text-muted);
+            font-size: 0.84rem;
+        }
+
+        .ranking-table {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: var(--bg-elevated);
+        }
+
+        .ranking-header,
+        .ranking-row {
+            display: grid;
+            grid-template-columns: 52px 1.8fr repeat(4, 1fr) 1.1fr;
+            gap: 12px;
+            padding: 14px 18px;
             align-items: center;
         }
+
         .ranking-header {
-            background: rgba(43, 47, 54, 0.8);
             position: sticky;
             top: 0;
             z-index: 1;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.76rem;
             font-weight: 600;
-            color: #b7bdc6;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
         }
+
         .ranking-row {
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid var(--border);
             cursor: pointer;
+            transition: background 0.12s ease;
         }
+
         .ranking-row:hover {
-            background: rgba(43, 47, 54, 0.8);
-            border-color: #00d4aa;
+            background: var(--surface-hover);
         }
+
+        .ranking-row .item-name {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .ranking-row .rank {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
         .ranking-scroll {
-            max-height: 600px;
+            max-height: 620px;
             overflow-y: auto;
         }
+
         .mono {
             font-variant-numeric: tabular-nums;
+            font-size: 0.88rem;
         }
+
+        .margin-positive {
+            color: var(--green);
+            font-weight: 600;
+        }
+
         .sortable {
             cursor: pointer;
             user-select: none;
         }
-        .sortable .arrow {
-            opacity: 0.8;
-            margin-left: 4px;
+
+        .sortable:hover {
+            color: var(--text);
         }
 
-        @media (max-width: 1000px) {
-            .ranking-header, .ranking-row {
-                grid-template-columns: 50px 2fr 1fr 1fr 1fr 1fr;
+        .sortable .arrow {
+            margin-left: 4px;
+            color: var(--accent);
+        }
+
+        .inline-input {
+            width: 120px;
+            padding: 6px 8px;
+        }
+
+        @media (max-width: 1024px) {
+            .stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+
+            .volume-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .ranking-header,
+            .ranking-row {
+                grid-template-columns: 44px 1.6fr repeat(4, 1fr);
+            }
+
             .col-weekly {
                 display: none;
             }
         }
 
         @media (max-width: 768px) {
-            .controls {
+            .app {
+                padding: 20px 16px 32px;
+            }
+
+            .topbar {
+                flex-direction: column;
+            }
+
+            .tabs {
+                display: flex;
+                width: 100%;
+                border-radius: var(--radius-md);
+            }
+
+            .nav-tab {
+                flex: 1;
+                padding-inline: 10px;
+                font-size: 0.82rem;
+            }
+
+            .toolbar {
                 flex-direction: column;
                 align-items: stretch;
             }
-            
-            .nav-tabs {
-                flex-direction: column;
+
+            .control-group,
+            .control-group-wide {
+                min-width: 0;
+                width: 100%;
             }
-            
-            .header h1 {
-                font-size: 2em;
+
+            .stats,
+            .volume-stats {
+                grid-template-columns: 1fr 1fr;
             }
-            
-            .stats {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+
+            .ranking-header,
+            .ranking-row {
+                grid-template-columns: 36px 1.4fr 1fr 1fr;
+                padding: 12px 14px;
+            }
+
+            .ranking-header > :nth-child(n+5),
+            .ranking-row > :nth-child(n+5) {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Hypixel Bazaar Analytics</h1>
-            <p>Real-time market analysis with comprehensive item search and volume tracking</p>
-            <p id="lastUpdatedInfo" class="ranking-info" style="margin-top: 8px;"></p>
-        </div>
-        
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('home', event)">🏠 Home &amp; Search</button>
-            <button class="nav-tab" onclick="switchTab('analysis', event)">📊 Market Analysis</button>
-            <button class="nav-tab" onclick="switchTab('top50', event)">🏆 Best Flips</button>
-        </div>
-        
-        <div id="homeTab" class="tab-content active">
-            <div class="search-section">
-                <h2>Search Bazaar Items</h2>
-                <div class="search-box">
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search for items (e.g. enchanted, coal, diamond...)">
-                    <span class="search-icon">🔍</span>
-                </div>
-                
-                <div class="controls">
-                    <div class="control-group">
-                        <label for="apiKeyHome">Hypixel API Key (optional):</label>
-                        <input type="text" id="apiKeyHome" placeholder="Optional — bazaar data is public" value="">
-                    </div>
-                    <button onclick="loadAllItems()" id="loadItemsBtn">Load All Items</button>
-                </div>
-                
-                <div id="itemsContainer">
-                    <div class="loading">Click "Load All Items" to browse the bazaar</div>
+    <div class="app">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">BZ</div>
+                <div>
+                    <h1>Bazaar Analytics</h1>
+                    <p class="subtitle">Hypixel SkyBlock market data</p>
                 </div>
             </div>
+            <p id="lastUpdatedInfo" class="meta"></p>
+        </header>
+
+        <nav class="tabs">
+            <button class="nav-tab active" data-tab="home" onclick="switchTab('home', event)">Browse</button>
+            <button class="nav-tab" data-tab="analysis" onclick="switchTab('analysis', event)">Analysis</button>
+            <button class="nav-tab" data-tab="top50" onclick="switchTab('top50', event)">Best Flips</button>
+        </nav>
+
+        <main>
+        <div id="homeTab" class="tab-content active">
+            <section class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 class="panel-title">Browse items</h2>
+                        <p class="panel-desc">Search the full bazaar and open any item for depth analysis.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="loadAllItems()" id="loadItemsBtn">Load items</button>
+                </div>
+
+                <div class="search-box">
+                    <span class="search-icon">⌕</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search enchanted coal, diamond, etc.">
+                </div>
+
+                <div id="itemsContainer">
+                    <div class="empty-state">Load the bazaar to start browsing items.</div>
+                </div>
+            </section>
         </div>
-        
+
         <div id="analysisTab" class="tab-content">
             <div id="currentItem" class="current-item" style="display: none;">
-                <h2 id="currentItemName">Select an item to analyze</h2>
-            </div>
-            
-            <div class="controls">
-                <div class="control-group">
-                    <label for="apiKey">Hypixel API Key (optional):</label>
-                    <input type="text" id="apiKey" placeholder="Optional — bazaar data is public" value="">
-                </div>
-                
-                <div class="control-group">
-                    <label for="productId">Product:</label>
-                    <input type="text" id="productId" placeholder="Enter product ID (e.g. ENCHANTED_COAL)" readonly="">
-                </div>
-                
-                <button onclick="fetchMarketData()" id="loadBtn">Load Market Data</button>
-                <button onclick="autoRefresh()" id="autoRefreshBtn">Auto Refresh (30s)</button>
-            </div>
-            
-            <div id="statusMessage"></div>
-            
-            <div class="stats" id="statsContainer" style="display: none;">
-                <div class="stat-card">
-                    <div class="stat-value" id="instasellPrice">-</div>
-                    <div class="stat-label">Instasell Price</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="instabuyPrice">-</div>
-                    <div class="stat-label">Instabuy Price</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="spreadValue">-</div>
-                    <div class="stat-label">Margin</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="spreadPercent">-</div>
-                    <div class="stat-label">Margin %</div>
+                <div>
+                    <div class="badge">Selected item</div>
+                    <h2 id="currentItemName">Select an item to analyze</h2>
                 </div>
             </div>
-            
-            <div class="volume-stats" id="volumeContainer" style="display: none;">
-                <div class="stat-card">
-                    <div class="stat-value" id="sellVolume">-</div>
-                    <div class="stat-label">Current Sell Volume</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="buyVolume">-</div>
-                    <div class="stat-label">Current Buy Volume</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="sellMovingWeek">-</div>
-                    <div class="stat-label">Weekly Sell Volume</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="buyMovingWeek">-</div>
-                    <div class="stat-label">Weekly Buy Volume</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="sellOrders">-</div>
-                    <div class="stat-label">Sell Orders</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="buyOrders">-</div>
-                    <div class="stat-label">Buy Orders</div>
-                </div>
-            </div>
-            
-            <div class="chart-container">
-                <div id="chart" style="width: 100%; height: 600px;"></div>
-            </div>
-        </div>
 
-        <!-- Best Flips Tab -->
-        <div id="top50Tab" class="tab-content">
-            <div class="controls">
-                <div class="control-group">
-                    <label for="apiKeyTop">Hypixel API Key (optional):</label>
-                    <input type="text" id="apiKeyTop" placeholder="Optional — bazaar data is public">
+            <section class="panel">
+                <div class="toolbar">
+                    <div class="control-group">
+                        <label for="productId">Product ID</label>
+                        <input type="text" id="productId" placeholder="ENCHANTED_COAL" readonly>
+                    </div>
+                    <button class="btn btn-primary" onclick="fetchMarketData()" id="loadBtn">Load data</button>
+                    <button class="btn btn-secondary" onclick="autoRefresh()" id="autoRefreshBtn">Auto refresh · 30s</button>
                 </div>
-                <div class="control-group">
-                    <label for="rankingMetric">Sort by:</label>
-                    <select id="rankingMetric">
-                        <option value="margin">Margin (Instasell - Instabuy)</option>
-                        <option value="marginPct">Margin %</option>
-                    </select>
-                </div>
-                <div class="control-group" style="min-width: 320px;">
-                    <label for="minVolumeSlider">Minimum weekly total volume</label>
-                    <input type="range" id="minVolumeSlider" min="0" max="1000" step="1" value="0">
-                    <div class="ranking-info">
-                        Current: <span id="minVolumeValue">0</span>
-                        <span style="margin-left:8px;">| Set exact: </span>
-                        <input id="minVolumeInput" type="number" min="0" step="1" style="width: 140px; background:#2d3748; color:white; border-radius:6px; border:none; padding:6px 8px;">
+
+                <div id="statusMessage"></div>
+
+                <div class="stats" id="statsContainer" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-label">Instasell</div>
+                        <div class="stat-value" id="instasellPrice">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Instabuy</div>
+                        <div class="stat-value" id="instabuyPrice">-</div>
+                    </div>
+                    <div class="stat-card highlight">
+                        <div class="stat-label">Margin</div>
+                        <div class="stat-value" id="spreadValue">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Margin %</div>
+                        <div class="stat-value" id="spreadPercent">-</div>
                     </div>
                 </div>
-                <button id="loadRankingBtn" onclick="loadTop50()">Load / Refresh Best Flips</button>
-            </div>
 
-            <div class="ranking-info" style="margin-bottom: 10px;">
-                Note: Margin = Instasell price - Instabuy price (profit when positive). Weekly total volume = buyMovingWeek + sellMovingWeek. Bazaar data is cached for about 60 seconds. Click a row to open detailed analysis.
-            </div>
+                <div class="volume-stats" id="volumeContainer" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-label">Sell volume</div>
+                        <div class="stat-value" id="sellVolume">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Buy volume</div>
+                        <div class="stat-value" id="buyVolume">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Weekly sell</div>
+                        <div class="stat-value" id="sellMovingWeek">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Weekly buy</div>
+                        <div class="stat-value" id="buyMovingWeek">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Sell orders</div>
+                        <div class="stat-value" id="sellOrders">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Buy orders</div>
+                        <div class="stat-value" id="buyOrders">-</div>
+                    </div>
+                </div>
 
-            <div id="rankingContainer">
-                <div class="loading">Click "Load / Refresh Best Flips" to rank items</div>
-            </div>
+                <div class="chart-container">
+                    <div id="chart"></div>
+                </div>
+            </section>
         </div>
+
+        <div id="top50Tab" class="tab-content">
+            <section class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 class="panel-title">Best flips</h2>
+                        <p class="panel-desc">Rank items by margin with a minimum weekly volume filter.</p>
+                    </div>
+                    <button class="btn btn-primary" id="loadRankingBtn" onclick="loadTop50()">Refresh ranking</button>
+                </div>
+
+                <div class="toolbar">
+                    <div class="control-group">
+                        <label for="rankingMetric">Sort by</label>
+                        <select id="rankingMetric">
+                            <option value="margin">Margin (Instasell − Instabuy)</option>
+                            <option value="marginPct">Margin %</option>
+                        </select>
+                    </div>
+                    <div class="control-group control-group-wide">
+                        <label for="minVolumeSlider">Minimum weekly volume</label>
+                        <input type="range" id="minVolumeSlider" min="0" max="1000" step="1" value="0">
+                        <div class="ranking-info">
+                            Current: <span id="minVolumeValue">0</span>
+                            <span style="margin-left: 12px;">Exact value</span>
+                            <input id="minVolumeInput" class="inline-input" type="number" min="0" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <p class="notice notice-info">
+                    Margin = Instasell − Instabuy. Weekly volume = buyMovingWeek + sellMovingWeek. Data refreshes about once per minute. Click a row to inspect an item.
+                </p>
+
+                <div id="rankingContainer">
+                    <div class="empty-state">Refresh the ranking to see the top flips.</div>
+                </div>
+            </section>
+        </div>
+        </main>
     </div>
 
     <script>
@@ -506,15 +837,8 @@
         let logMin = 0, logMax = 1;
         let currentMinVolume = 0;
 
-        function buildBazaarUrl(apiKey) {
-            const trimmed = (apiKey || '').trim();
-            return trimmed
-                ? `${BAZAAR_API}?key=${encodeURIComponent(trimmed)}`
-                : BAZAAR_API;
-        }
-
-        async function fetchBazaar(apiKey) {
-            const response = await fetch(buildBazaarUrl(apiKey));
+        async function fetchBazaar() {
+            const response = await fetch(BAZAAR_API);
 
             if (!response.ok) {
                 throw new Error(`API Error: ${response.status} ${response.statusText}`);
@@ -541,7 +865,7 @@
                 return;
             }
 
-            info.textContent = `Bazaar data last updated: ${new Date(lastUpdated).toLocaleString()}`;
+            info.textContent = `Updated ${new Date(lastUpdated).toLocaleString()}`;
         }
 
         function getProductPrices(product) {
@@ -570,10 +894,6 @@
                 document.getElementById('analysisTab').classList.add('active');
             } else if (tabName === 'top50') {
                 document.getElementById('top50Tab').classList.add('active');
-                const apiTop = document.getElementById('apiKeyTop');
-                if (!apiTop.value) {
-                    apiTop.value = document.getElementById('apiKeyHome').value || document.getElementById('apiKey').value;
-                }
                 if (allBazaarData && !rankingPrepared) {
                     initTop50Controls();
                 }
@@ -624,22 +944,17 @@
         }
         
         async function loadAllItems() {
-            const apiKey = document.getElementById('apiKeyHome').value.trim();
             const loadBtn = document.getElementById('loadItemsBtn');
             const container = document.getElementById('itemsContainer');
 
             loadBtn.disabled = true;
             loadBtn.textContent = 'Loading...';
-            container.innerHTML = '<div class="loading">Fetching all bazaar items...</div>';
+            container.innerHTML = '<div class="empty-state">Fetching bazaar items...</div>';
 
             try {
-                const data = await fetchBazaar(apiKey);
+                const data = await fetchBazaar();
                 allBazaarData = data.products;
                 updateLastUpdated(data.lastUpdated);
-
-                document.getElementById('apiKey').value = apiKey;
-                const apiTop = document.getElementById('apiKeyTop');
-                if (apiTop) apiTop.value = apiKey;
 
                 rankingPrepared = false;
 
@@ -651,7 +966,7 @@
                 container.innerHTML = `<div class="error">Error: ${error.message}</div>`;
             } finally {
                 loadBtn.disabled = false;
-                loadBtn.textContent = 'Refresh Items';
+                loadBtn.textContent = 'Refresh items';
             }
         }
         
@@ -660,7 +975,7 @@
             const itemsArray = Object.entries(items);
             
             if (itemsArray.length === 0) {
-                container.innerHTML = '<div class="loading">No items found</div>';
+                container.innerHTML = '<div class="empty-state">No items found.</div>';
                 return;
             }
             
@@ -677,8 +992,8 @@
                 card.innerHTML = `
                     <div class="item-name">${formatItemName(productId)}</div>
                     <div class="item-prices">
-                        <span>Sell: ${formatPriceCompact(instasell)}</span>
-                        <span>Buy: ${formatPriceCompact(instabuy)}</span>
+                        <span class="price-tag sell">Sell ${formatPriceCompact(instasell)}</span>
+                        <span class="price-tag buy">Buy ${formatPriceCompact(instabuy)}</span>
                     </div>
                 `;
 
@@ -710,7 +1025,7 @@
         function selectItem(productId) {
             switchTab('analysis');
             document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.nav-tab')[1].classList.add('active');
+            document.querySelector('.nav-tab[data-tab="analysis"]')?.classList.add('active');
             
             document.getElementById('productId').value = productId;
             document.getElementById('currentItemName').textContent = formatItemName(productId);
@@ -720,7 +1035,6 @@
         }
         
         async function fetchMarketData() {
-            const apiKey = document.getElementById('apiKey').value.trim();
             const productId = document.getElementById('productId').value.trim();
             const loadBtn = document.getElementById('loadBtn');
 
@@ -734,7 +1048,7 @@
             showMessage('Fetching market data...', 'loading');
 
             try {
-                const data = await fetchBazaar(apiKey);
+                const data = await fetchBazaar();
                 updateLastUpdated(data.lastUpdated);
 
                 if (!data.products[productId]) {
@@ -758,7 +1072,7 @@
                 showMessage(`Error: ${error.message}`, 'error');
             } finally {
                 loadBtn.disabled = false;
-                loadBtn.textContent = 'Load Market Data';
+                loadBtn.textContent = 'Load data';
             }
         }
         
@@ -814,8 +1128,8 @@
                     type: 'scatter',
                     mode: 'lines',
                     fill: 'tozeroy',
-                    fillcolor: 'rgba(0, 212, 170, 0.3)',
-                    line: { color: '#00d4aa', width: 2, shape: 'hv' },
+                    fillcolor: 'rgba(74, 222, 128, 0.18)',
+                    line: { color: '#4ade80', width: 2, shape: 'hv' },
                     name: 'Buy Orders (Bids)',
                     text: bidPoints.map(p =>
                         `Price: ${p.y.toFixed(1)}<br>` +
@@ -824,7 +1138,7 @@
                         `Rank: #${p.rank}`
                     ),
                     hovertemplate: '%{text}<extra></extra>',
-                    hoverlabel: { bgcolor: '#00d4aa', font: { color: 'white' } }
+                    hoverlabel: { bgcolor: '#166534', font: { color: 'white' } }
                 });
             }
 
@@ -835,8 +1149,8 @@
                     type: 'scatter',
                     mode: 'lines',
                     fill: 'tozerox',
-                    fillcolor: 'rgba(246, 70, 93, 0.3)',
-                    line: { color: '#f6465d', width: 2, shape: 'hv' },
+                    fillcolor: 'rgba(248, 113, 113, 0.18)',
+                    line: { color: '#f87171', width: 2, shape: 'hv' },
                     name: 'Sell Orders (Asks)',
                     text: askPoints.map(p =>
                         `Price: ${p.y.toFixed(1)}<br>` +
@@ -845,7 +1159,7 @@
                         `Rank: #${p.rank}`
                     ),
                     hovertemplate: '%{text}<extra></extra>',
-                    hoverlabel: { bgcolor: '#f6465d', font: { color: 'white' } }
+                    hoverlabel: { bgcolor: '#991b1b', font: { color: 'white' } }
                 });
             }
 
@@ -865,38 +1179,40 @@
 
             const layout = {
                 title: {
-                    text: `${formatItemName(productId)} Market Depth<br><sub>Margin: ${formatPriceCompact(margin)} (${marginPct.toFixed(1)}%)</sub>`,
-                    font: { size: 16, color: 'white' },
-                    x: 0.5
+                    text: `${formatItemName(productId)}<br><sup style="color:#a1a1aa">Margin ${formatPriceCompact(margin)} · ${marginPct.toFixed(1)}%</sup>`,
+                    font: { size: 18, color: '#fafafa', family: 'Inter, sans-serif' },
+                    x: 0.02,
+                    xanchor: 'left'
                 },
+                margin: { l: 60, r: 24, t: 72, b: 60 },
                 xaxis: {
                     title: {
-                        text: 'Cumulative Volume<br><i>(Negative: Sell Orders | Positive: Buy Orders)</i>',
-                        font: { size: 12, color: 'white' }
+                        text: 'Cumulative volume',
+                        font: { size: 12, color: '#a1a1aa' }
                     },
-                    tickfont: { color: 'white' },
-                    gridcolor: 'rgba(255, 255, 255, 0.1)',
-                    zerolinecolor: 'rgba(255, 255, 255, 0.3)',
+                    tickfont: { color: '#71717a' },
+                    gridcolor: 'rgba(255, 255, 255, 0.06)',
+                    zerolinecolor: 'rgba(255, 255, 255, 0.12)',
                     range: [-maxX, maxX],
                     tickformat: ',.'
                 },
                 yaxis: {
                     title: {
-                        text: 'Price per Unit',
-                        font: { size: 12, color: 'white' }
+                        text: 'Price per unit',
+                        font: { size: 12, color: '#a1a1aa' }
                     },
-                    tickfont: { color: 'white' },
-                    gridcolor: 'rgba(255, 255, 255, 0.1)',
+                    tickfont: { color: '#71717a' },
+                    gridcolor: 'rgba(255, 255, 255, 0.06)',
                     tickformat: '.1f',
                     range: [yMin, yMax]
                 },
-                plot_bgcolor: 'rgba(30, 35, 41, 0)',
-                paper_bgcolor: 'rgba(30, 35, 41, 0)',
-                font: { color: 'white' },
+                plot_bgcolor: 'rgba(0, 0, 0, 0)',
+                paper_bgcolor: 'rgba(0, 0, 0, 0)',
+                font: { color: '#fafafa', family: 'Inter, sans-serif' },
                 legend: {
-                    bgcolor: 'rgba(43, 47, 54, 0.8)',
-                    bordercolor: 'rgba(255, 255, 255, 0.1)',
-                    font: { color: 'white' }
+                    bgcolor: 'rgba(24, 24, 27, 0.92)',
+                    bordercolor: 'rgba(255, 255, 255, 0.08)',
+                    font: { color: '#fafafa' }
                 },
                 hovermode: 'closest',
                 shapes: [
@@ -904,27 +1220,27 @@
                         type: 'line',
                         x0: -maxX, x1: maxX,
                         y0: instasell, y1: instasell,
-                        line: { color: '#00d4aa', width: 1, dash: 'dash' }
+                        line: { color: '#4ade80', width: 1, dash: 'dash' }
                     }] : []),
                     ...(instabuy > 0 ? [{
                         type: 'line',
                         x0: -maxX, x1: maxX,
                         y0: instabuy, y1: instabuy,
-                        line: { color: '#f6465d', width: 1, dash: 'dash' }
+                        line: { color: '#f87171', width: 1, dash: 'dash' }
                     }] : [])
                 ],
                 annotations: [
                     ...(instasell > 0 ? [{
-                        text: `Instasell: ${formatPriceCompact(instasell)}`,
-                        x: maxX * 0.9, y: instasell,
+                        text: `Instasell ${formatPriceCompact(instasell)}`,
+                        x: maxX * 0.92, y: instasell,
                         showarrow: false,
-                        font: { color: '#00d4aa' }
+                        font: { color: '#4ade80', size: 11 }
                     }] : []),
                     ...(instabuy > 0 ? [{
-                        text: `Instabuy: ${formatPriceCompact(instabuy)}`,
-                        x: -maxX * 0.9, y: instabuy,
+                        text: `Instabuy ${formatPriceCompact(instabuy)}`,
+                        x: -maxX * 0.92, y: instabuy,
                         showarrow: false,
-                        font: { color: '#f6465d' }
+                        font: { color: '#f87171', size: 11 }
                     }] : [])
                 ]
             };
@@ -959,7 +1275,8 @@
         
         function showMessage(message, type) {
             const statusDiv = document.getElementById('statusMessage');
-            statusDiv.innerHTML = `<div class="${type}">${message}</div>`;
+            const className = type === 'loading' ? 'notice notice-info' : type;
+            statusDiv.innerHTML = `<div class="${className}">${message}</div>`;
             if (type === 'success') {
                 setTimeout(() => {
                     statusDiv.innerHTML = '';
@@ -972,12 +1289,12 @@
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
                 autoRefreshInterval = null;
-                btn.textContent = 'Auto Refresh (30s)';
-                btn.style.background = 'linear-gradient(45deg, #00d4aa, #00b894)';
+                btn.textContent = 'Auto refresh · 30s';
+                btn.className = 'btn btn-secondary';
             } else {
                 autoRefreshInterval = setInterval(fetchMarketData, 30000);
-                btn.textContent = 'Stop Auto Refresh';
-                btn.style.background = 'linear-gradient(45deg, #f6465d, #e74c3c)';
+                btn.textContent = 'Stop auto refresh';
+                btn.className = 'btn btn-danger';
                 fetchMarketData();
             }
         }
@@ -1061,20 +1378,16 @@
 
         async function loadTop50() {
             const container = document.getElementById('rankingContainer');
-            const apiKey = (document.getElementById('apiKeyTop').value || '').trim();
             const btn = document.getElementById('loadRankingBtn');
 
             btn.disabled = true;
             btn.textContent = 'Loading...';
-            container.innerHTML = '<div class="loading">Fetching bazaar data...</div>';
+            container.innerHTML = '<div class="empty-state">Fetching bazaar data...</div>';
 
             try {
-                const data = await fetchBazaar(apiKey);
+                const data = await fetchBazaar();
                 allBazaarData = data.products;
                 updateLastUpdated(data.lastUpdated);
-
-                document.getElementById('apiKeyHome').value = apiKey || document.getElementById('apiKeyHome').value;
-                document.getElementById('apiKey').value = apiKey || document.getElementById('apiKey').value;
 
                 if (!rankingPrepared) {
                     initTop50Controls();
@@ -1086,14 +1399,14 @@
                 container.innerHTML = `<div class="error">Error: ${err.message}</div>`;
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Load / Refresh Best Flips';
+                btn.textContent = 'Refresh ranking';
             }
         }
 
         function renderTop50Ranking() {
             const container = document.getElementById('rankingContainer');
             if (!allBazaarData) {
-                container.innerHTML = '<div class="loading">Click "Load / Refresh Best Flips" to rank items</div>';
+                container.innerHTML = '<div class="empty-state">Refresh the ranking to see the top flips.</div>';
                 return;
             }
 
@@ -1163,11 +1476,11 @@
 
             const bodyRows = displayRows.map((r, i) => `
                 <div class="ranking-row" onclick="selectItem('${r.productId}')">
-                    <div>${i + 1}</div>
+                    <div class="rank">${i + 1}</div>
                     <div class="item-name">${r.name}</div>
                     <div class="mono">${formatPriceCompact(r.instasell)}</div>
                     <div class="mono">${formatPriceCompact(r.instabuy)}</div>
-                    <div class="mono">${formatPriceCompact(r.margin)}</div>
+                    <div class="mono margin-positive">${formatPriceCompact(r.margin)}</div>
                     <div class="mono">${r.marginPct.toFixed(2)}%</div>
                     <div class="mono col-weekly" title="Buy week: ${r.buyWeek.toLocaleString()} | Sell week: ${r.sellWeek.toLocaleString()}">
                         ${formatNumber(r.weeklyTotal)}
