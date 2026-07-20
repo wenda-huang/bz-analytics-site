@@ -1077,6 +1077,11 @@
         }
         
         function createChart(productId, bidOrders, askOrders, quickStatus) {
+            if (typeof Plotly === 'undefined') {
+                showMessage('Chart library failed to load. Refresh the page and try again.', 'error');
+                return;
+            }
+
             const bidData = bidOrders.map(order => ({
                 price: order.pricePerUnit,
                 volume: order.amount
