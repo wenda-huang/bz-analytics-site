@@ -1,0 +1,7 @@
+{
+  "name": "bz-analytics-site",
+  "private": true,
+  "devDependencies": {
+    "wrangler": "^4.24.4"
+  }
+}
